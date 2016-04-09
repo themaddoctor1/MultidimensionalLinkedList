@@ -100,9 +100,10 @@ int isEmpty(DimLL d) {
  * overflow from the addition.
  */
 void* pushVal(DimLL d, void* value) {
+    
     //Holds the layer of the given DimLL
     int layer = d->layer;
-
+    
     //The node currently in question.
     LLnode curr = d->front;
     if(curr == NULL) {
@@ -118,7 +119,7 @@ void* pushVal(DimLL d, void* value) {
 	return NULL;
 	
     }
-
+    
     //Holds the index where the item is being inserted.
     int idx = 0;
     while(curr->next != NULL) {
@@ -128,27 +129,29 @@ void* pushVal(DimLL d, void* value) {
 
     //If at the bottom layer, insert the item or report overflow.
     if(layer == 0) {
-	if(idx == 15)
+	if(idx == 3)
 	    return value;
-	curr->next = makeLLnode();
-	curr->next->val = value;
-	return NULL;
+	else {
+	    curr ->next = makeLLnode();
+	    curr = curr->next;
+	    curr->val = value;
+	    return NULL;
+	}
     }
     
     //A new list should be inserted.
     void* overflow = pushVal((DimLL) curr->val, value);
     if(overflow != NULL) { //There was overflow
-	if(idx == 3) //No more list can be added; return the overflow
+	if(idx == 3) {//No more list can be added; return the overflow
 	    return overflow;
+	}
 	
 	//Builds the next value in the list
 	curr->next = makeLLnode();
-	if(layer == 0) { //Bottom layer, so stick the value in
-	    curr->next->val = value;
-	} else { //Not yet at the bottom, so make a sublist.
-	    curr->next->val = buildDimLL(layer-1, NULL);
-	    overflow = pushVal((DimLL) curr->next->val, value);
-	}
+	DimLL sublist = buildDimLL(layer-1, NULL);
+	curr->next->val = sublist;
+	overflow = pushVal(sublist, value);
+	
         
     }
 
@@ -161,7 +164,7 @@ int addVal(DimLL d, void* value) {
     void* overflow = pushVal(d, value);
     if(overflow != NULL) {
 	DimLL sublist = buildDimLL(d->layer, d->front);
-	d->layer++;
+	d->layer += 1;
 	d->front = makeLLnode();
 	d->front->val = sublist;
 	pushVal(d, value);
@@ -171,6 +174,7 @@ int addVal(DimLL d, void* value) {
 }
 
 void* getVal(DimLL d, int idx) {
+    
     if(d->layer == 0) {
 	//Iterates to get the right value
 	int i;
@@ -182,7 +186,7 @@ void* getVal(DimLL d, int idx) {
     }
 
     //Find which list to add to.
-    int index = (idx & (4 << (2 * d->layer))) >> 2 * d->layer;
+    int index = (idx & (3 << (2 * d->layer))) >> 2 * d->layer;
 
     int i;
     LLnode curr = d->front;
@@ -230,7 +234,7 @@ void* remVal(DimLL d, int idx) {
 	return rem;
     } else {
 
-	int targ = (idx & (4 << (2 * d->layer))) >> (2 * d->layer);
+	int targ = (idx & (3 << (2 * d->layer))) >> (2 * d->layer);
 
 	//First, remove the back item. If that list is empty, remove it.
 	int len = length(d);
@@ -238,7 +242,7 @@ void* remVal(DimLL d, int idx) {
 	void* push = NULL; //The thing to be added next.
 	
 	int i;
-        for(i = len; i > targ+2; i--) {
+        for(i = len; i > targ+1; i--) {
 	    curr = d->front;
 	    int j;
 	    for(j = 0; j < i-1; j++)
@@ -277,6 +281,38 @@ void* remVal(DimLL d, int idx) {
     
 }
 
-int main() {
+/**
+ * A test that ensures that the program works.
+ */
+void workingTest() {
+    //The sample list
+    DimLL list = makeDimLL();
+
+    //val is a pointer that will be added to list.
+    char* val = "abc";
+
+    //The length of the list in testing
+    int len = 260;
+
+    //Creates a test list and assigns values.
+    char** test[len];
+    int i;
+    for(i = 0; i < len; i++)
+	test[i] = (void*) (val + i%16);
+
+    //Adds the values
+    for(i = 0; i < len; i++)
+	addVal(list, (void*) (val + i%16));
+
+    //Outputs them to be sure that they were put in correctly.
+    for(i = 0; i < len; i++) {
+	printf("Index %i:\n", i);
+	printf("%p\n", getVal(list, i));
+    }
     
+    
+}
+
+int main() {
+    workingTest();
 }
