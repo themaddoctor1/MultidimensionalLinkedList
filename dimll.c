@@ -304,10 +304,25 @@ void workingTest() {
     for(i = 0; i < len; i++)
 	addVal(list, (void*) (val + i%16));
 
+    int fail = 0;
+    
     //Outputs them to be sure that they were put in correctly.
     for(i = 0; i < len; i++) {
+	void* val = getVal(list, i);
 	printf("Index %i:\n", i);
 	printf("%p\n", getVal(list, i));
+
+	fail += val == (void*) test[i] ? 0 : 1;
+	
+    }
+
+    if(!fail)
+	printf("The data structure correctly stored all of the values.\n");
+    else
+	printf("The data structure had errors in %i places.\n", fail);
+
+    for(int i = 0; i < len/20; i++) {
+	printf("Removed %p from index %i\n", remVal(list, 5*i), 5*i);
     }
     
     
